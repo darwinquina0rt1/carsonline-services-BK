@@ -8,6 +8,7 @@ export const config = () => {
     // Configuración de la base de datos
     database: {
       uri: process.env.MONGO_URI,
+      name: 'main_webappcars',
     },
     
     // Configuración del servidor

@@ -1,27 +1,66 @@
 import express from 'express';
+import cors from 'cors';
 import { config } from './APP/configs/config';
 
 const app = express();
 const serverConfig = config();
 
+// Middleware para CORS
+app.use(cors({
+  origin: '*', // En producción, especifica los dominios permitidos
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 // Middleware para parsear JSON
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Ruta de prueba
+// Ruta principal
 app.get('/', (req, res) => {
   res.json({ 
     message: '¡Backend funcionando correctamente!',
     port: serverConfig.server.port,
-    environment: serverConfig.server.nodeEnv
+    environment: serverConfig.server.nodeEnv,
+    database: serverConfig.database.name,
+    api: {
+      baseUrl: `/api`,
+      endpoints: [
+        'GET /api - Información del API',
+        'GET /api/vehicles - Vehículos agrupados por marca',
+        'GET /api/vehicles/brand/:marca - Vehículos por marca específica',
+        'GET /api/brands - Marcas disponibles',
+        'GET /api/stats - Estadísticas por marca',
+        'GET /api/health - Estado del servidor'
+      ]
+    }
+  });
+});
+
+// Configurar rutas del API
+import vehicleRouter from './APP/routers/router';
+app.use('/api', vehicleRouter);
+
+// Manejo de errores global
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Error global:', err);
+  res.status(500).json({
+    success: false,
+    message: 'Error interno del servidor',
+    error: process.env.NODE_ENV === 'development' ? err.message : 'Error interno'
   });
 });
 
 // Iniciar el servidor
 app.listen(serverConfig.server.port, () => {
-  console.log(` Servidor corriendo en el puerto ${serverConfig.server.port}`);
+  console.log(` Servidor CarOnline corriendo en el puerto ${serverConfig.server.port}`);
   console.log(` Entorno: ${serverConfig.server.nodeEnv}`);
-  console.log(` URI de la base de datos: ${serverConfig.database.uri}`);
+  console.log(`  Base de datos: ${serverConfig.database.name}`);
+  console.log(` API disponible en: http://localhost:${serverConfig.server.port}/api`);
+  console.log(` Health check: http://localhost:${serverConfig.server.port}/api/health`);
 });
 
 export default app;
+
+
+//comando para ejecutar el script npx ts-node server.ts
