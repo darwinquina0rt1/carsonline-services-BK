@@ -180,6 +180,8 @@ class VehicleService {
         }
       });
 
+
+      //respuesta que retocna está función
       return stats;
     } catch (error) {
       console.error('Error al obtener estadísticas por marca:', error);

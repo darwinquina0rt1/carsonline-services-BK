@@ -76,6 +76,7 @@ export const getAvailableBrands = async (req: Request, res: Response): Promise<v
       data: brands,
       total: brands.length
     });
+    //mejora de visualizar errores
   } catch (error) {
     console.error('Error en el controlador - getAvailableBrands:', error);
     res.status(500).json({
@@ -127,3 +128,6 @@ export const healthCheck = async (req: Request, res: Response): Promise<void> =>
     });
   }
 };
+
+
+//este archivo maneja la lógica del proyecto, va conectado con los servicios en services

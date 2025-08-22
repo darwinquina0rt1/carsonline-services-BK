@@ -47,3 +47,5 @@ router.get('/', (req, res) => {
 });
 
 export default router;
+
+//los routers se usan para crear direcciones que usara el frontend
