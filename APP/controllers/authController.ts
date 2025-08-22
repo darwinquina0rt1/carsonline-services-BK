@@ -44,7 +44,9 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         message: result.message,
         data: {
           user: result.user,
-          loginTime: new Date().toISOString()
+          token: result.token,
+          loginTime: new Date().toISOString(),
+          authProvider: 'local'
         }
       });
     } else {

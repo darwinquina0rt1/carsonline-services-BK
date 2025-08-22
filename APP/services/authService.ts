@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { config } from '../configs/config';
+import JWTService from './jwtService';
 
 // Definir el esquema para los usuarios
 const userSchema = new mongoose.Schema({
@@ -10,7 +11,15 @@ const userSchema = new mongoose.Schema({
   role: { type: String, enum: ['admin', 'user'], default: 'user' },
   isActive: { type: Boolean, default: true },
   lastLogin: { type: Date },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  // Campos específicos para Google OAuth
+  googleId: { type: String, sparse: true },
+  googleProfile: {
+    name: String,
+    picture: String,
+    locale: String
+  },
+  authProvider: { type: String, enum: ['local', 'google'], default: 'local' }
 }, {
   timestamps: true
 });
@@ -25,7 +34,8 @@ const sessionLogSchema = new mongoose.Schema({
   ipAddress: { type: String },
   userAgent: { type: String },
   status: { type: String, enum: ['success', 'failed'], default: 'success' },
-  message: { type: String }
+  message: { type: String },
+  authProvider: { type: String, enum: ['local', 'google'], default: 'local' }
 }, {
   timestamps: true
 });
@@ -68,8 +78,11 @@ interface LoginResponse {
 class AuthService {
   private static instance: AuthService;
   private isConnected: boolean = false;
+  private jwtService: JWTService;
 
-  private constructor() {}
+  private constructor() {
+    this.jwtService = JWTService.getInstance();
+  }
 
   public static getInstance(): AuthService {
     if (!AuthService.instance) {
@@ -130,7 +143,8 @@ class AuthService {
           status: 'failed',
           message: 'Usuario no encontrado o inactivo',
           ipAddress,
-          userAgent
+          userAgent,
+          authProvider: 'local'
         });
 
         return {
@@ -152,7 +166,8 @@ class AuthService {
           status: 'failed',
           message: 'Contraseña incorrecta',
           ipAddress,
-          userAgent
+          userAgent,
+          authProvider: 'local'
         });
 
         return {
@@ -175,7 +190,17 @@ class AuthService {
         status: 'success',
         message: 'Login exitoso',
         ipAddress,
-        userAgent
+        userAgent,
+        authProvider: 'local'
+      });
+
+      // Generar token JWT
+      const token = this.jwtService.generateToken({
+        userId: user._id.toString(),
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        authProvider: 'local'
       });
 
       // Retornar respuesta exitosa
@@ -187,7 +212,8 @@ class AuthService {
           username: user.username,
           email: user.email,
           role: user.role
-        }
+        },
+        token
       };
 
     } catch (error) {
@@ -307,6 +333,7 @@ class AuthService {
     message?: string;
     ipAddress?: string;
     userAgent?: string;
+    authProvider?: 'local' | 'google';
   }): Promise<void> {
     try {
       await this.connectToDatabase();
@@ -332,7 +359,8 @@ class AuthService {
         ipAddress: userData.ipAddress,
         userAgent: userData.userAgent,
         status: userData.status,
-        message: userData.message
+        message: userData.message,
+        authProvider: userData.authProvider || 'local'
       });
 
       await sessionLog.save();

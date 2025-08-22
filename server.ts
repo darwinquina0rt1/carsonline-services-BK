@@ -35,7 +35,10 @@ app.get('/', (req, res) => {
         'POST /api/auth/login - Iniciar sesión',
         'POST /api/auth/register - Registrar nuevo usuario',
         'GET /api/auth/check/:username - Verificar si existe usuario',
-        'GET /api/auth/user/:userId - Obtener información de usuario'
+        'GET /api/auth/user/:userId - Obtener información de usuario',
+        'POST /api/auth/google/login - Iniciar sesión con Google',
+        'POST /api/auth/google/verify - Verificar token de Google',
+        'GET /api/auth/google/health - Estado de autenticación con Google'
       ]
     }
   });
@@ -44,9 +47,11 @@ app.get('/', (req, res) => {
 // Configurar rutas del API
 import vehicleRouter from './APP/routers/router';
 import authRouter from './APP/routers/auth';
+import googleAuthRouter from './APP/routers/googleAuth';
 
 app.use('/api', vehicleRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/auth/google', googleAuthRouter);
 
 // Manejo de errores global
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
