@@ -31,7 +31,11 @@ app.get('/', (req, res) => {
         'GET /api/vehicles/brand/:marca - Vehículos por marca específica',
         'GET /api/brands - Marcas disponibles',
         'GET /api/stats - Estadísticas por marca',
-        'GET /api/health - Estado del servidor'
+        'GET /api/health - Estado del servidor',
+        'POST /api/auth/login - Iniciar sesión',
+        'POST /api/auth/register - Registrar nuevo usuario',
+        'GET /api/auth/check/:username - Verificar si existe usuario',
+        'GET /api/auth/user/:userId - Obtener información de usuario'
       ]
     }
   });
@@ -39,7 +43,10 @@ app.get('/', (req, res) => {
 
 // Configurar rutas del API
 import vehicleRouter from './APP/routers/router';
+import authRouter from './APP/routers/auth';
+
 app.use('/api', vehicleRouter);
+app.use('/api/auth', authRouter);
 
 // Manejo de errores global
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
