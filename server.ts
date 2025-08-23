@@ -76,3 +76,4 @@ export default app;
 
 
 //comando para ejecutar el script npx ts-node server.ts
+//heroku local web -f Procfile.dev
