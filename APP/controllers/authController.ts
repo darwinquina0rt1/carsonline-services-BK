@@ -35,7 +35,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
     const userAgent = req.get('User-Agent') || 'unknown';
 
-    // Validar credenciales
+    // Comprobar autenticidad de usuario y contraseña
     const result = await authService.validateUser({ username: email, password }, ipAddress, userAgent);
 
     if (result.success) {
@@ -66,7 +66,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-// Registro de nuevo usuario
+// Crear un nuevo registro de usuario
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const { username, email, password, role }: RegisterRequest = req.body;
@@ -80,7 +80,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Validar formato de email
+    // Verificar que el email cumpla con el formato correcto
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       res.status(400).json({
@@ -90,7 +90,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Validar longitud de contraseña
+    // Verificar que la contraseña cumpla con la longitud mínima y máxima
     if (password.length < 6) {
       res.status(400).json({
         success: false,
