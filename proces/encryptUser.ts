@@ -77,3 +77,5 @@ async function encryptExistingUser() {
 
 // Ejecutar la función
 encryptExistingUser();
+
+//se cambio el nombre la forma de la encriptacionde usuarios
