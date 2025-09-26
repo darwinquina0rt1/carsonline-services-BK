@@ -1,5 +1,11 @@
 import { Request, Response } from 'express';
 import AuthService from '../services/authService';
+import { getDuoClient } from '../src/utils/duoClient';
+import { savePending } from '../src/utils/pendingLogins';
+import { duoConfig } from '../configs/duo';
+
+import { takePending } from '../src/utils/pendingLogins';
+import JWTService from '../services/jwtService';
 
 const authService = AuthService.getInstance();
 
@@ -7,6 +13,7 @@ const authService = AuthService.getInstance();
 interface LoginRequest {
   email: string;
   password: string;
+  mfa:string;
 }
 
 // Interfaz para la petición de registro
@@ -20,7 +27,7 @@ interface RegisterRequest {
 // Login de usuario
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, password }: LoginRequest = req.body;
+    const { email, password,mfa }: LoginRequest = req.body;
 
     // Validar que se proporcionen los campos requeridos
     if (!email || !password) {
@@ -39,6 +46,23 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const result = await authService.validateUser({ username: email, password }, ipAddress, userAgent);
 
     if (result.success) {
+
+      if(mfa=="S"){
+          const duo =  getDuoClient();
+    const state = duo.generateState();
+    savePending(state, { userId: result.user._id , email: result.user.email, createdAt: Date.now() });
+
+    const duoAuthUrl = await duo.createAuthUrl(result.user.email , state);
+
+    res.status(200).json({
+      success: true,
+      message: 'MFA requerido: redirigir a Duo',
+      data: { mfaRequired: true, duoAuthUrl }
+    });
+    return;
+      }
+
+    //OMITOR EL OBJETO USUARIO PARA DEVOLVER RETO MFA
       res.status(200).json({
         success: true,
         message: result.message,
@@ -246,3 +270,48 @@ export const authHealthCheck = async (req: Request, res: Response): Promise<void
     });
   }
 };
+
+function redirectToFront(res: Response, params: Record<string, string>) {
+  const url = new URL(duoConfig.frontSuccessUrl);
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  return res.redirect(url.toString());
+}
+export async function duoCallback(req: Request, res: Response): Promise<void> {
+  const { state, duo_code } = req.query as { state?: string; duo_code?: string };
+
+  if (!state || !duo_code) {
+    res.status(400).send('Missing state or duo_code');
+    return;
+  }
+
+  const pending = takePending(state);
+  if (!pending) {
+    res.status(400).send('Invalid or expired state');
+    return;
+  }
+
+  try {
+    const duo =  getDuoClient();
+    const result = await duo.exchangeAuthorizationCodeFor2FAResult(String(duo_code), pending.email);
+    if (result.auth_result.result !== 'allow') {
+      redirectToFront(res, { mfa: 'denied' });
+      return;
+    }
+
+    const jwt = JWTService.getInstance();
+    const token = jwt.generateToken({
+      userId: pending.userId,
+      username: pending.email,  // o tu username real
+      email: pending.email,
+      role: 'user',             // o el role real de tu usuario
+      authProvider: 'local+duo',
+      mfa: true
+    });
+
+    redirectToFront(res, { mfa: 'ok', token });
+
+  } catch (error) {
+    console.error('Duo callback error:', error);
+    redirectToFront(res, { mfa: 'error' });
+  }
+}

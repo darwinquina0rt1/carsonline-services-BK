@@ -4,7 +4,8 @@ import {
     register,
     checkUserExists,
     getUserById,
-    authHealthCheck
+    authHealthCheck,
+    duoCallback
 } from '../controllers/authController';
 
 const router = express.Router();
@@ -23,6 +24,8 @@ router.get('/check/:username', checkUserExists);
 
 // Obtener información de usuario por ID
 router.get('/user/:userId', getUserById);
+
+router.get('/duo/callback', duoCallback);
 
 // Ruta por defecto del API de autenticación
 router.get('/', (req, res) => {

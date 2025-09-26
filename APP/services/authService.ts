@@ -120,9 +120,34 @@ class AuthService {
   // Validar credenciales de usuario
   public async validateUser(credentials: LoginCredentials, ipAddress?: string, userAgent?: string): Promise<LoginResponse> {
     try {
+      const { username, password } = credentials;
+       if (false) {
+      const email = username.includes('@') ? username : `${username}@mock.local`;
+      const mockUser = {
+        _id: 'mock-' + Buffer.from(username).toString('hex').slice(0, 8),
+        username: username.includes('@') ? username.split('@')[0] : username,
+        email,
+        role: 'user',
+      };
+
+
+      const token = this.jwtService.generateToken({
+        userId: mockUser._id,
+        username: mockUser.username,
+        email: mockUser.email,
+        role: mockUser.role,
+        authProvider: 'local',
+      });
+
+      return {
+        success: true,
+        message: 'Login exitoso (MOCK)',
+        user: mockUser,
+        token,
+      };
+    }
       await this.connectToDatabase();
       
-      const { username, password } = credentials;
 
       // Buscar usuario por username o email
       const user = await User.findOne({

@@ -26,7 +26,7 @@ export const config = () => {
   // Configuración de JWT
   jwt: {
     secret: process.env.JWT_SECRET || 'tu-secret-key-super-segura',
-    expiresIn: process.env.JWT_EXPIRES_IN || '24h',
+    expiresIn: process.env.JWT_EXPIRES_IN || '120s',
   },
   };
 };
