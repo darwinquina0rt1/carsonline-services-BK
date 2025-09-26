@@ -5,6 +5,7 @@ import {
     checkUserExists,
     getUserById,
     authHealthCheck,
+    debugToken,
     duoCallback
 } from '../controllers/authController';
 
@@ -24,6 +25,9 @@ router.get('/check/:username', checkUserExists);
 
 // Obtener información de usuario por ID
 router.get('/user/:userId', getUserById);
+
+// Debug endpoint para verificar token
+router.get('/debug-token', debugToken);
 
 router.get('/duo/callback', duoCallback);
 
