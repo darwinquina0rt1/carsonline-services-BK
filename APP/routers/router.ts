@@ -7,6 +7,15 @@ import {
     healthCheck
 } from '../controllers/controller';
 
+
+// servicios y controalddores para crear eliminar y editar
+import {
+    createVehicle,
+    updateVehicle,
+    deleteVehicle,
+    crudHealthCheck
+} from '../controllers/crudcars';
+
 const router = express.Router();
 
 // Health check endpoint
@@ -24,6 +33,19 @@ router.get('/brands', getAvailableBrands);
 // Obtener estadísticas de vehículos por marca
 router.get('/stats', getVehicleStatsByBrand);
 
+// ===== RUTAS CRUD PARA VEHÍCULOS =====
+// Crear vehículo
+router.post('/vehicles', createVehicle);
+
+// Editar vehículo
+router.put('/vehicles/:id', updateVehicle);
+
+// Eliminar vehículo
+router.delete('/vehicles/:id', deleteVehicle);
+
+// Health check para módulo CRUD
+router.get('/vehicles/health', crudHealthCheck);
+
 // Ruta por defecto del API
 router.get('/', (req, res) => {
   res.json({
@@ -35,13 +57,23 @@ router.get('/', (req, res) => {
       vehicles: 'GET /vehicles - Obtener todos los vehículos agrupados por marca',
       vehiclesByBrand: 'GET /vehicles/brand/:marca - Obtener vehículos por marca específica',
       brands: 'GET /brands - Obtener todas las marcas disponibles',
-      stats: 'GET /stats - Obtener estadísticas de vehículos por marca'
+      stats: 'GET /stats - Obtener estadísticas de vehículos por marca',
+      // CRUD Endpoints
+      createVehicle: 'POST /vehicles - Crear nuevo vehículo',
+      updateVehicle: 'PUT /vehicles/:id - Actualizar vehículo',
+      deleteVehicle: 'DELETE /vehicles/:id - Eliminar vehículo',
+      crudHealth: 'GET /vehicles/health - Health check del módulo CRUD'
     },
     example: {
       getAllVehicles: '/api/vehicles',
       getVehiclesByBrand: '/api/vehicles/brand/Toyota',
       getBrands: '/api/brands',
-      getStats: '/api/stats'
+      getStats: '/api/stats',
+      // CRUD Examples
+      createVehicle: '/api/vehicles',
+      updateVehicle: '/api/vehicles/1',
+      deleteVehicle: '/api/vehicles/1',
+      crudHealth: '/api/vehicles/health'
     }
   });
 });

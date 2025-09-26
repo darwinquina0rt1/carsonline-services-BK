@@ -11,7 +11,8 @@ const vehicleSchema = new mongoose.Schema({
   estado: { type: String, required: true },
   kilometraje: { type: String, required: true },
   color: { type: String, required: true },
-  image: { type: String, required: true }
+  image: { type: String, required: true },
+  status: { type: String, default: null } // Campo para soft delete
 }, {
   timestamps: true
 });
@@ -30,6 +31,7 @@ interface VehicleType {
   kilometraje: string;
   color: string;
   image: string;
+  status?: string; // Campo opcional para soft delete
 }
 
 // Interfaz para el resultado agrupado por marca
@@ -82,7 +84,7 @@ class VehicleService {
     try {
       await this.connectToDatabase();
       
-      const vehicles = await Vehicle.find({}).sort({ marca: 1, modelo: 1 });
+      const vehicles = await Vehicle.find({ status: { $ne: "DELETED" } }).sort({ marca: 1, modelo: 1 });
       
       // Agrupar vehículos por marca
       const groupedVehicles: GroupedVehicles = {};
@@ -118,8 +120,10 @@ class VehicleService {
     try {
       await this.connectToDatabase();
       
-      const vehicles = await Vehicle.find({ marca: { $regex: marca, $options: 'i' } })
-        .sort({ modelo: 1 });
+      const vehicles = await Vehicle.find({ 
+        marca: { $regex: marca, $options: 'i' },
+        status: { $ne: "DELETED" }
+      }).sort({ modelo: 1 });
       
       return vehicles.map(vehicle => ({
         id: vehicle.id,
@@ -143,7 +147,7 @@ class VehicleService {
     try {
       await this.connectToDatabase();
       
-      const brands = await Vehicle.distinct('marca');
+      const brands = await Vehicle.distinct('marca', { status: { $ne: "DELETED" } });
       return brands.sort();
     } catch (error) {
       console.error('Error al obtener marcas disponibles:', error);
@@ -156,7 +160,7 @@ class VehicleService {
     try {
       await this.connectToDatabase();
       
-      const vehicles = await Vehicle.find({});
+      const vehicles = await Vehicle.find({ status: { $ne: "DELETED" } });
       const stats: { [marca: string]: { total: number; disponibles: number; vendidos: number; mantenimiento: number } } = {};
       
       vehicles.forEach((vehicle) => {
