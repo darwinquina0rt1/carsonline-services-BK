@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { config } from './APP/configs/config';
+import { endpointLogger } from './APP/middleware/endpointLogger';
 
 const app = express();
 const serverConfig = config();
@@ -15,6 +16,9 @@ app.use(cors({
 // Middleware para parsear JSON
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Middleware para logging de endpoints (debe ir después de los middlewares de parsing)
+app.use(endpointLogger);
 
 // Ruta principal
 app.get('/', (req, res) => {
@@ -38,7 +42,12 @@ app.get('/', (req, res) => {
         'GET /api/auth/user/:userId - Obtener información de usuario',
         'POST /api/auth/google/login - Iniciar sesión con Google',
         'POST /api/auth/google/verify - Verificar token de Google',
-        'GET /api/auth/google/health - Estado de autenticación con Google'
+        'GET /api/auth/google/health - Estado de autenticación con Google',
+        'GET /api/logs/health - Estado del sistema de logs',
+        'GET /api/logs/user/:userId - Logs de usuario específico',
+        'GET /api/logs/endpoint/:endpoint - Logs de endpoint específico',
+        'GET /api/logs/stats - Estadísticas de uso de endpoints',
+        'DELETE /api/logs/clean - Limpiar logs antiguos'
       ]
     }
   });
@@ -49,11 +58,13 @@ import vehicleRouter from './APP/routers/router';
 import authRouter from './APP/routers/auth';
 import googleAuthRouter from './APP/routers/googleAuth';
 import permissionRouter from './APP/routers/permissions';
+import logRouter from './APP/routers/logs';
 
 app.use('/api', vehicleRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/auth/google', googleAuthRouter);
 app.use('/api/permissions', permissionRouter);
+app.use('/api/logs', logRouter);
 
 // Manejo de errores global
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
