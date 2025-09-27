@@ -1,6 +1,22 @@
 import { Request, Response, NextFunction } from 'express';
 import JWTService from '../services/jwtService';
 
+// Extender la interfaz Request para incluir user
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        userId: string;
+        username: string;
+        email: string;
+        role: string;
+        authProvider: string;
+        mfa?: boolean;
+      };
+    }
+  }
+}
+
 export function authGuard(req: Request, res: Response, next: NextFunction) {
   const hdr = req.headers.authorization;
   if (!hdr || !hdr.startsWith('Bearer ')) {
@@ -10,10 +26,23 @@ export function authGuard(req: Request, res: Response, next: NextFunction) {
   try {
     const jwt = JWTService.getInstance();
     const dec = jwt.verifyToken(token) as any;
-    if (!dec?.mfa) {
+    
+    
+    // Verificar MFA - puede ser true (boolean) o "true" (string)
+    if (dec?.mfa !== true && dec?.mfa !== "true") {
       return res.status(403).json({ success:false, message:'mfa_required' });
     }
-    (req as any).user = dec;
+    
+    
+    // Asignar información del usuario al request
+    req.user = {
+      userId: dec.userId,
+      username: dec.username,
+      email: dec.email,
+      role: dec.role,
+      authProvider: dec.authProvider,
+      mfa: dec.mfa
+    };
     next();
   } catch (e: any) {
     const msg = e?.name === 'TokenExpiredError' ? 'jwt_expired' : 'jwt_invalid';

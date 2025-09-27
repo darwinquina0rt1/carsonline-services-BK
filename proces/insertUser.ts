@@ -33,16 +33,12 @@ async function insertTestUser() {
       ? `${mongoUri}${dbName}` 
       : `${mongoUri}/${dbName}`;
 
-    console.log('Conectando a MongoDB...');
     await mongoose.connect(fullUri);
-    console.log(`Conectado a MongoDB - Base de datos: ${dbName}`);
 
     // Verificar si el usuario ya existe
     const existingUser = await User.findOne({ username: 'admin' });
     
     if (existingUser) {
-      console.log('El usuario admin ya existe en la base de datos');
-      console.log('Eliminando usuario existente para recrearlo...');
       await User.findByIdAndDelete(existingUser._id);
     }
 
@@ -60,17 +56,8 @@ async function insertTestUser() {
     });
 
     await testUser.save();
-    console.log('✅ Usuario creado exitosamente:');
-    console.log('- Username: admin');
-    console.log('- Email: darwin@gmail.com');
-    console.log('- Password: 1234567 (encriptada en DB)');
-    console.log('- Role: admin');
-    console.log('\n🔐 Para hacer login usa:');
-    console.log('Username: admin');
-    console.log('Password: 1234567');
 
     await mongoose.connection.close();
-    console.log('\nConexión cerrada. Usuario insertado correctamente.');
 
   } catch (error) {
     console.error('Error al insertar usuario de prueba:', error);

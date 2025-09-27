@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import GoogleAuthService from '../services/googleAuthService';
+import { getClientIP } from '../src/utils/ipUtils';
 
 const googleAuthService = GoogleAuthService.getInstance();
 
@@ -29,10 +30,9 @@ export const loginWithGoogle = async (req: Request, res: Response): Promise<void
     }
 
     // Obtener IP y User-Agent
-    const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
+    const ipAddress = getClientIP(req);
     const userAgent = req.get('User-Agent') || 'unknown';
 
-    console.log('Iniciando autenticación con Google...');
 
     // Autenticar con Google usando los datos del perfil
     const result = await googleAuthService.authenticateWithGoogleProfile({
@@ -87,7 +87,6 @@ export const verifyGoogleToken = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    console.log('Verificando access token de Google...');
 
     // Verificar el token
     const googleProfile = await googleAuthService.verifyGoogleAccessToken(accessToken);

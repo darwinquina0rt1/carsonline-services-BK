@@ -1139,7 +1139,6 @@ async function connectToDatabase() {
       : `${mongoUri}/${dbName}`;
 
     await mongoose.connect(fullUri);
-    console.log(` Conexión exitosa a MongoDB - Base de datos: ${dbName}`);
   } catch (error) {
     console.error(' Error al conectar a MongoDB:', error);
     process.exit(1);
@@ -1149,21 +1148,13 @@ async function connectToDatabase() {
 // Función para insertar vehículos
 async function insertVehicles() {
   try {
-    console.log(' Iniciando inserción de vehículos...');
     
     // Limpiar la colección existente (opcional)
     await Vehicle.deleteMany({});
-    console.log('  Colección limpiada');
     
     // Insertar todos los vehículos
     const result = await Vehicle.insertMany(vehicles);
     
-    console.log(` Se insertaron ${result.length} vehículos exitosamente`);
-    console.log(' Resumen de vehículos insertados:');
-    
-    result.forEach((vehicle, index) => {
-      console.log(`${index + 1}. ${vehicle.marca} ${vehicle.modelo} - ${vehicle.estado}`);
-    });
     
   } catch (error) {
     console.error(' Error al insertar vehículos:', error);
@@ -1175,13 +1166,11 @@ async function main() {
   try {
     await connectToDatabase();
     await insertVehicles();
-    console.log(' Proceso completado exitosamente');
   } catch (error) {
     console.error(' Error en el proceso:', error);
   } finally {
     // Cerrar la conexión
     await mongoose.connection.close();
-    console.log(' Conexión a MongoDB cerrada');
     process.exit(0);
   }
 }

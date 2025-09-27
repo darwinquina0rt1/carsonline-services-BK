@@ -7,7 +7,6 @@ import {
     healthCheck
 } from '../controllers/controller';
 
-
 // servicios y controalddores para crear eliminar y editar
 import {
     createVehicle,
@@ -15,6 +14,10 @@ import {
     deleteVehicle,
     crudHealthCheck
 } from '../controllers/crudcars';
+
+// Middleware de autenticación y permisos
+import { authGuard } from '../middleware/authGuard';
+import { requirePermission } from '../middleware/permissionGuard';
 
 const router = express.Router();
 
@@ -34,14 +37,14 @@ router.get('/brands', getAvailableBrands);
 router.get('/stats', getVehicleStatsByBrand);
 
 // ===== RUTAS CRUD PARA VEHÍCULOS =====
-// Crear vehículo
-router.post('/vehicles', createVehicle);
+// Crear vehículo (requiere permiso create:vehicle)
+router.post('/vehicles', authGuard, requirePermission('create:vehicle'), createVehicle);
 
-// Editar vehículo
-router.put('/vehicles/:id', updateVehicle);
+// Editar vehículo (requiere permiso update:vehicle)
+router.put('/vehicles/:id', authGuard, requirePermission('update:vehicle'), updateVehicle);
 
-// Eliminar vehículo
-router.delete('/vehicles/:id', deleteVehicle);
+// Eliminar vehículo (requiere permiso delete:vehicle)
+router.delete('/vehicles/:id', authGuard, requirePermission('delete:vehicle'), deleteVehicle);
 
 // Health check para módulo CRUD
 router.get('/vehicles/health', crudHealthCheck);

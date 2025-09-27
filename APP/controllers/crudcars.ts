@@ -6,7 +6,6 @@ const vehicleApiService = VehicleApiService.getInstance();
 // 1. CREAR VEHÍCULO
 export const createVehicle = async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log('Creando nuevo vehículo...');
     
     // Validar que se envíen todos los campos requeridos
     const { marca, modelo, año, precio, estado, kilometraje, color, image } = req.body;
@@ -86,7 +85,6 @@ export const updateVehicle = async (req: Request, res: Response): Promise<void> 
     if (updateData.color) cleanUpdateData.color = updateData.color.trim();
     if (updateData.image) cleanUpdateData.image = updateData.image.trim();
 
-    console.log(`Actualizando vehículo con ID: ${vehicleId}`);
     
     // Llamar al servicio para actualizar el vehículo
     const updatedVehicle = await vehicleApiService.updateVehicle(vehicleId, cleanUpdateData);
@@ -129,7 +127,6 @@ export const deleteVehicle = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    console.log(`Eliminando vehículo con ID: ${vehicleId}`);
     
     // Llamar al servicio para eliminar el vehículo (soft delete)
     const deletedVehicle = await vehicleApiService.deleteVehicle(vehicleId);

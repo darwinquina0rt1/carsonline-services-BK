@@ -48,10 +48,12 @@ app.get('/', (req, res) => {
 import vehicleRouter from './APP/routers/router';
 import authRouter from './APP/routers/auth';
 import googleAuthRouter from './APP/routers/googleAuth';
+import permissionRouter from './APP/routers/permissions';
 
 app.use('/api', vehicleRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/auth/google', googleAuthRouter);
+app.use('/api/permissions', permissionRouter);
 
 // Manejo de errores global
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -65,11 +67,6 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 
 // Iniciar el servidor
 app.listen(serverConfig.server.port, () => {
-  console.log(` Servidor CarOnline corriendo en el puerto ${serverConfig.server.port}`);
-  console.log(` Entorno: ${serverConfig.server.nodeEnv}`);
-  console.log(`  Base de datos: ${serverConfig.database.name}`);
-  console.log(` API disponible en: http://localhost:${serverConfig.server.port}/api`);
-  console.log(` Health check: http://localhost:${serverConfig.server.port}/api/health`);
 });
 
 export default app;

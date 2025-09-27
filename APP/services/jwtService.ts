@@ -18,7 +18,7 @@ class JWTService {
   private constructor() {
     const cfg = config();
     this.jwtSecret = cfg.jwt.secret;
-    this.jwtExpiresIn = cfg.jwt.expiresIn; // '120s'
+    this.jwtExpiresIn = cfg.jwt.expiresIn;
   }
 
   public static getInstance(): JWTService {

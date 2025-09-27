@@ -4,6 +4,7 @@ import RateLimitService from '../services/rateLimitService';
 import { getDuoClient } from '../src/utils/duoClient';
 import { savePending } from '../src/utils/pendingLogins';
 import { duoConfig } from '../configs/duo';
+import { getClientIP } from '../src/utils/ipUtils';
 
 import { takePending } from '../src/utils/pendingLogins';
 import JWTService from '../services/jwtService';
@@ -41,7 +42,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     }
 
     // Obtener IP y User-Agent
-    const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
+    const ipAddress = getClientIP(req);
     const userAgent = req.get('User-Agent') || 'unknown';
 
     // Verificar rate limiting con exponential backoff
@@ -66,7 +67,6 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       if(mfa=="S"){
         // Verificar si Duo está configurado
         if (!process.env.DUO_CLIENT_ID || !process.env.DUO_CLIENT_SECRET || !process.env.DUO_API_HOST) {
-          console.log('⚠️  MFA solicitado pero Duo Security no está configurado. Continuando sin MFA...');
           
           // Generar JWT con MFA simulado para desarrollo
           const jwt = JWTService.getInstance();
@@ -179,7 +179,6 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    console.log(`Intento de registro para usuario: ${username}`);
 
     // Crear usuario
     const result = await authService.createUser({
@@ -229,7 +228,6 @@ export const checkUserExists = async (req: Request, res: Response): Promise<void
       return;
     }
 
-    console.log(`Verificando si existe el usuario: ${username}`);
 
     const exists = await authService.userExists(username);
 
@@ -265,7 +263,6 @@ export const getUserById = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    console.log(`Obteniendo información del usuario: ${userId}`);
 
     const user = await authService.getUserById(userId);
 
@@ -338,7 +335,12 @@ export const debugToken = async (req: Request, res: Response): Promise<void> => 
           expiresAt: exp,
           timeLeftSeconds: timeLeft,
           isExpired: timeLeft <= 0,
-          mfaCompleted: decoded.mfa
+          mfaCompleted: decoded.mfa,
+          // 🔥 Agregar información de configuración
+          config: {
+            jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1m',
+            jwtSecret: process.env.JWT_SECRET ? 'configurado' : 'por defecto'
+          }
         }
       });
     } catch (error: any) {

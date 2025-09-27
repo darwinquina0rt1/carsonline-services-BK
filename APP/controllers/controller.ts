@@ -6,7 +6,6 @@ const vehicleService = VehicleService.getInstance();
 // Obtener todos los vehículos agrupados por marca
 export const getVehiclesGroupedByBrand = async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log('Obteniendo vehículos agrupados por marca...');
     
     const groupedVehicles = await vehicleService.getVehiclesGroupedByBrand();
     
@@ -40,7 +39,6 @@ export const getVehiclesByBrand = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    console.log(`Obteniendo vehículos de la marca: ${marca}`);
     
     const vehicles = await vehicleService.getVehiclesByBrand(marca);
     
@@ -66,7 +64,6 @@ export const getVehiclesByBrand = async (req: Request, res: Response): Promise<v
 // Obtener todas las marcas disponibles
 export const getAvailableBrands = async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log('Obteniendo marcas disponibles...');
     
     const brands = await vehicleService.getAvailableBrands();
     
@@ -90,7 +87,6 @@ export const getAvailableBrands = async (req: Request, res: Response): Promise<v
 // Obtener estadísticas de vehículos por marca
 export const getVehicleStatsByBrand = async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log('Obteniendo estadísticas de vehículos por marca...');
     
     const stats = await vehicleService.getVehicleStatsByBrand();
     

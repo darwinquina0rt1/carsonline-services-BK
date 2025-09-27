@@ -52,7 +52,6 @@ class RateLimitService {
 
       await mongoose.connect(fullUri);
       this.isConnected = true;
-      console.log(`RateLimitService conectado a MongoDB - Base de datos: ${dbName}`);
     } catch (error) {
       console.error('Error al conectar RateLimitService a MongoDB:', error);
       throw error;
@@ -166,7 +165,6 @@ class RateLimitService {
         lastAttempt: { $lt: cutoffDate },
         successCount: { $gt: 0 }
       });
-      console.log(`Limpieza de intentos antiguos completada`);
     } catch (error) {
       console.error('Error en cleanupOldAttempts:', error);
     }

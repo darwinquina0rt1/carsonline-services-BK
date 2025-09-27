@@ -72,7 +72,6 @@ class VehicleService {
 
       await mongoose.connect(fullUri);
       this.isConnected = true;
-      console.log(`Servicio conectado a MongoDB - Base de datos: ${dbName}`);
     } catch (error) {
       console.error('Error al conectar a MongoDB:', error);
       throw error;
@@ -198,7 +197,6 @@ class VehicleService {
     if (this.isConnected) {
       await mongoose.connection.close();
       this.isConnected = false;
-      console.log('Conexión a MongoDB cerrada');
     }
   }
 }
