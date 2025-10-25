@@ -59,6 +59,7 @@ import authRouter from './APP/routers/auth';
 import googleAuthRouter from './APP/routers/googleAuth';
 import permissionRouter from './APP/routers/permissions';
 import logRouter from './APP/routers/logs';
+import './APP/jobs/calcLoginMetrics.js';
 
 app.use('/api', vehicleRouter);
 app.use('/api/auth', authRouter);

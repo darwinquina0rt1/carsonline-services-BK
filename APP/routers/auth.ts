@@ -6,7 +6,8 @@ import {
     getUserById,
     authHealthCheck,
     debugToken,
-    duoCallback
+    duoCallback,
+    getReport
 } from '../controllers/authController';
 
 const router = express.Router();
@@ -16,6 +17,8 @@ router.get('/health', authHealthCheck);
 
 // Login de usuario
 router.post('/login', login);
+router.post('/dashboard', getReport);
+
 
 // Registro de nuevo usuario
 router.post('/register', register);

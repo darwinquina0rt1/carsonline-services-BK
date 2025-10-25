@@ -31,7 +31,6 @@ interface RegisterRequest {
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password,mfa }: LoginRequest = req.body;
-
     // Validar que se proporcionen los campos requeridos
     if (!email || !password) {
       res.status(400).json({
@@ -43,11 +42,17 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     // Obtener IP y User-Agent
     const ipAddress = getClientIP(req);
+        console.log("iniciando login",ipAddress)
+
     const userAgent = req.get('User-Agent') || 'unknown';
 
     // Verificar rate limiting con exponential backoff
-    const rateLimitResult = await rateLimitService.checkRateLimit(ipAddress, 'ip');
-    
+  
+
+    // Comprobar autenticidad de usuario y contraseña
+    const result = await authService.validateUser({ username: email, password }, ipAddress, userAgent);
+  const rateLimitResult = await rateLimitService.checkRateLimit(ipAddress, 'ip');
+    console.log("Rete: ",rateLimitResult)
     if (!rateLimitResult.allowed) {
       res.status(429).json({
         success: false,
@@ -56,10 +61,6 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       });
       return;
     }
-
-    // Comprobar autenticidad de usuario y contraseña
-    const result = await authService.validateUser({ username: email, password }, ipAddress, userAgent);
-
     if (result.success) {
       // Reset rate limiting en login exitoso
       await rateLimitService.resetAttempts(ipAddress, 'ip');
@@ -432,5 +433,21 @@ export async function duoCallback(req: Request, res: Response): Promise<void> {
   } catch (error) {
     console.error('Duo callback error:', error);
     redirectToFront(res, { mfa: 'error' });
+  }
+}
+
+
+export async function getReport(req: Request, res: Response): Promise<void> {
+  try {
+
+     const rateLimitResult = await rateLimitService.GenerateReport();
+     res.status(200).json(rateLimitResult);
+
+  } catch (error) {
+       res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      error: error instanceof Error ? error.message : 'Error desconocido'
+    });
   }
 }
