@@ -63,7 +63,7 @@ export const getVehiclesByBrand = async (req: Request, res: Response): Promise<v
   }
 };
 
-// Obtener todas las marcas disponibles
+// Muestra todas las marcas existentes
 export const getAvailableBrands = async (req: Request, res: Response): Promise<void> => {
   try {
     console.log('Obteniendo marcas disponibles...');
@@ -76,7 +76,7 @@ export const getAvailableBrands = async (req: Request, res: Response): Promise<v
       data: brands,
       total: brands.length
     });
-    //mejora de visualizar errores
+    //Actualiza la gestión de errores
   } catch (error) {
     console.error('Error en el controlador - getAvailableBrands:', error);
     res.status(500).json({
@@ -87,7 +87,7 @@ export const getAvailableBrands = async (req: Request, res: Response): Promise<v
   }
 };
 
-// Obtener estadísticas de vehículos por marca
+// Muestra estadísticas por marca de vehículo
 export const getVehicleStatsByBrand = async (req: Request, res: Response): Promise<void> => {
   try {
     console.log('Obteniendo estadísticas de vehículos por marca...');
