@@ -9,6 +9,9 @@ API REST para gestionar información de vehículos, desarrollado con Node.js, Ty
 - **Patrón de diseño**: Singleton para el servicio de base de datos
 - **Respuestas**: Formato JSON estandarizado
 - **CORS**: Habilitado para desarrollo frontend
+- **Autenticación**: JWT con Google OAuth y MFA (Duo Security)
+- **Permisos**: Sistema de roles y permisos granular
+- **Rate Limiting**: Protección contra ataques de fuerza bruta
 
 ## 📋 Endpoints Disponibles
 
@@ -86,6 +89,30 @@ GET /api/stats
 ```
 Retorna estadísticas de vehículos por marca (total, disponibles, vendidos, en mantenimiento).
 
+## 🔐 Sistema de Autenticación y Permisos
+
+### **Autenticación**
+- **Login normal**: `POST /api/auth/login`
+- **Registro**: `POST /api/auth/register`
+- **Login con Google**: `POST /api/auth/google/login`
+- **Verificar token**: `GET /api/auth/debug-token`
+
+### **Sistema de Permisos**
+- **Obtener permisos del usuario**: `GET /api/permissions/user`
+- **Verificar permiso específico**: `GET /api/permissions/check/:permission`
+- **Todos los permisos (admin)**: `GET /api/permissions/all`
+
+### **Roles y Permisos**
+| Rol | Permisos |
+|-----|----------|
+| **admin** | `create:vehicle`, `read:vehicle`, `update:vehicle`, `delete:vehicle`, `publish:vehicle` |
+| **user** | `create:vehicle`, `read:vehicle` |
+
+### **Rutas Protegidas**
+- **Crear vehículo**: `POST /api/vehicles` (requiere `create:vehicle`)
+- **Editar vehículo**: `PUT /api/vehicles/:id` (requiere `update:vehicle`)
+- **Eliminar vehículo**: `DELETE /api/vehicles/:id` (requiere `delete:vehicle`)
+
 ## 🛠️ Instalación y Configuración
 
 ### Prerrequisitos
@@ -110,7 +137,22 @@ Crear un archivo `.env` en la raíz del proyecto:
 MONGO_URI=mongodb://localhost:27017
 PORT=3005
 NODE_ENV=development
+
+# JWT Configuration
+JWT_SECRET=tu-secret-key-super-segura-cambiar-en-produccion
+JWT_EXPIRES_IN=1m
+
+# Google OAuth (Opcional)
+GOOGLE_CLIENT_ID=tu_google_client_id
+GOOGLE_CLIENT_SECRET=tu_google_client_secret
+
+# Duo Security (Opcional - para MFA)
+DUO_CLIENT_ID=tu_duo_client_id
+DUO_CLIENT_SECRET=tu_duo_client_secret
+DUO_API_HOST=api-xxxxx.duosecurity.com
 ```
+
+**📋 Archivo de ejemplo:** Usa `env.example` como referencia.
 
 ### 4. Insertar datos de prueba
 ```bash
@@ -238,6 +280,247 @@ function VehicleList() {
       ))}
     </div>
   );
+}
+```
+
+## 🎯 **Implementación de Permisos en Frontend**
+
+### **1. Hook para Permisos (React)**
+```typescript
+import { useState, useEffect } from 'react';
+
+interface UserPermissions {
+  role: string;
+  permissions: string[];
+  canCreate: boolean;
+  canRead: boolean;
+  canUpdate: boolean;
+  canDelete: boolean;
+  canPublish: boolean;
+}
+
+export const usePermissions = () => {
+  const [permissions, setPermissions] = useState<UserPermissions | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setLoading(false);
+          return;
+        }
+
+        const response = await fetch('/api/permissions/user', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setPermissions(data.data);
+        }
+      } catch (error) {
+        console.error('Error al obtener permisos:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPermissions();
+  }, []);
+
+  return { permissions, loading };
+};
+```
+
+### **2. Componente de Botones Condicionales**
+```typescript
+import React from 'react';
+import { usePermissions } from './hooks/usePermissions';
+
+const VehicleCard = ({ vehicle }) => {
+  const { permissions, loading } = usePermissions();
+
+  if (loading) {
+    return <div>Cargando permisos...</div>;
+  }
+
+  return (
+    <div className="vehicle-card">
+      <h3>{vehicle.name}</h3>
+      <p>Precio: {vehicle.price}</p>
+      
+      {/* Botón Ver Detalles - Siempre visible */}
+      <button className="btn-primary">Ver Detalles</button>
+      
+      {/* Botón Agregar - Solo si tiene permiso create:vehicle */}
+      {permissions?.canCreate && (
+        <button className="btn-success">Agregar Vehículo</button>
+      )}
+      
+      {/* Botones de Editar y Eliminar - Solo admin */}
+      {permissions?.canUpdate && (
+        <button className="btn-warning">Editar</button>
+      )}
+      
+      {permissions?.canDelete && (
+        <button className="btn-danger">Eliminar</button>
+      )}
+    </div>
+  );
+};
+```
+
+### **3. Protección de Rutas**
+```typescript
+import { Navigate } from 'react-router-dom';
+import { usePermissions } from './hooks/usePermissions';
+
+const ProtectedRoute = ({ children, requiredPermission }) => {
+  const { permissions, loading } = usePermissions();
+
+  if (loading) {
+    return <div>Cargando...</div>;
+  }
+
+  if (!permissions?.permissions.includes(requiredPermission)) {
+    return <Navigate to="/unauthorized" />;
+  }
+
+  return children;
+};
+
+// Uso:
+<ProtectedRoute requiredPermission="update:vehicle">
+  <EditVehiclePage />
+</ProtectedRoute>
+```
+
+### **4. Interfaz de Usuario según Permisos**
+
+#### **👤 Usuario Normal (role: user)**
+- ✅ **Ver Detalles** - Siempre visible
+- ✅ **Agregar Vehículo** - Botón visible
+- ❌ **Editar** - Botón oculto
+- ❌ **Eliminar** - Botón oculto
+
+#### **👑 Administrador (role: admin)**
+- ✅ **Ver Detalles** - Siempre visible
+- ✅ **Agregar Vehículo** - Botón visible
+- ✅ **Editar** - Botón visible
+- ✅ **Eliminar** - Botón visible
+
+### **5. Ejemplo de Uso Completo**
+```typescript
+// En tu componente principal
+import { usePermissions } from './hooks/usePermissions';
+
+function Dashboard() {
+  const { permissions, loading } = usePermissions();
+
+  if (loading) return <div>Cargando...</div>;
+
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      
+      {/* Mostrar botones según permisos */}
+      {permissions?.canCreate && (
+        <button onClick={() => navigate('/add-vehicle')}>
+          Agregar Vehículo
+        </button>
+      )}
+      
+      {permissions?.canUpdate && (
+        <button onClick={() => navigate('/edit-vehicle')}>
+          Editar Vehículos
+        </button>
+      )}
+      
+      {permissions?.canDelete && (
+        <button onClick={() => navigate('/delete-vehicle')}>
+          Eliminar Vehículos
+        </button>
+      )}
+    </div>
+  );
+}
+```
+
+### **6. Endpoints de Permisos**
+```bash
+# Obtener permisos del usuario (requiere MFA)
+GET /api/permissions/user
+Authorization: Bearer <token>
+
+# Obtener permisos SIN verificar MFA (para testing)
+GET /api/permissions/user-no-mfa
+Authorization: Bearer <token>
+
+# Verificar permiso específico
+GET /api/permissions/check/create:vehicle
+Authorization: Bearer <token>
+
+# Respuesta de permisos
+{
+  "success": true,
+  "data": {
+    "role": "user",
+    "permissions": ["create:vehicle", "read:vehicle"],
+    "canCreate": true,
+    "canRead": true,
+    "canUpdate": false,
+    "canDelete": false,
+    "canPublish": false
+  }
+}
+```
+
+### **7. Solución al Error "mfa_required"**
+
+Si recibes el error `mfa_required`, significa que:
+1. **El token JWT ha expirado** (configuración de 1 minuto)
+2. **El token no tiene el campo `mfa: true`**
+
+**Soluciones:**
+
+#### **Opción 1: Usar endpoint sin MFA (Recomendado para testing)**
+```typescript
+// En tu frontend, cambiar de:
+const response = await fetch('/api/permissions/user', {
+  headers: { 'Authorization': `Bearer ${token}` }
+});
+
+// A:
+const response = await fetch('/api/permissions/user-no-mfa', {
+  headers: { 'Authorization': `Bearer ${token}` }
+});
+```
+
+#### **Opción 2: Aumentar duración del JWT**
+```env
+# En tu archivo .env
+JWT_EXPIRES_IN=1h  # Cambiar de 1m a 1h
+```
+
+#### **Opción 3: Verificar token antes de usar**
+```typescript
+// Verificar si el token es válido
+const debugResponse = await fetch('/api/auth/debug-token', {
+  headers: { 'Authorization': `Bearer ${token}` }
+});
+
+if (debugResponse.ok) {
+  // Token válido, proceder con permisos
+  const permissionsResponse = await fetch('/api/permissions/user', {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+} else {
+  // Token expirado, hacer login nuevamente
+  // Redirigir al login
 }
 ```
 

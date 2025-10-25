@@ -33,21 +33,16 @@ async function encryptExistingUser() {
       ? `${mongoUri}${dbName}` 
       : `${mongoUri}/${dbName}`;
 
-    console.log('Conectando a MongoDB...');
     await mongoose.connect(fullUri);
-    console.log(`Conectado a MongoDB - Base de datos: ${dbName}`);
 
     // Buscar el usuario admin
     const user = await User.findOne({ username: 'admin' });
     
     if (!user) {
-      console.log('Usuario admin no encontrado');
       await mongoose.connection.close();
       return;
     }
 
-    console.log('Usuario encontrado:', user.username);
-    console.log('Contraseña actual:', user.password);
 
     // Encriptar la contraseña "1234567"
     const saltRounds = 10;
@@ -58,14 +53,8 @@ async function encryptExistingUser() {
       password: hashedPassword
     });
 
-    console.log('✅ Contraseña encriptada exitosamente');
-    console.log('Nueva contraseña encriptada:', hashedPassword);
-    console.log('Ahora puedes hacer login con:');
-    console.log('- Username: admin');
-    console.log('- Password: 1234567');
 
     await mongoose.connection.close();
-    console.log('\nConexión cerrada. Usuario actualizado correctamente.');
 
   } catch (error) {
     console.error('Error al encriptar usuario:', error);
@@ -77,3 +66,5 @@ async function encryptExistingUser() {
 
 // Ejecutar la función
 encryptExistingUser();
+
+//se cambio el nombre la forma de la encriptacionde usuarios

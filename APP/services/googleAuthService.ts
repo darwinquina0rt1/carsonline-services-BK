@@ -92,7 +92,6 @@ class GoogleAuthService {
 
       await mongoose.connect(fullUri);
       this.isConnected = true;
-      console.log(`GoogleAuthService conectado a MongoDB - Base de datos: ${dbName}`);
     } catch (error) {
       console.error('Error al conectar a MongoDB:', error);
       throw error;
@@ -209,7 +208,6 @@ class GoogleAuthService {
         });
 
         await user.save();
-        console.log(`Nuevo usuario creado con Google: ${user.email}`);
       } else {
         // Usuario existente - actualizar información de Google si es necesario
         if (!user.googleId) {
@@ -235,7 +233,8 @@ class GoogleAuthService {
         username: user.username,
         email: user.email,
         role: user.role,
-        authProvider: 'google'
+        authProvider: 'google',
+        mfa: true  // Incluir MFA para usuarios de Google
       });
 
       // Guardar log de sesión exitosa
@@ -350,7 +349,6 @@ class GoogleAuthService {
         });
 
         await user.save();
-        console.log(`Nuevo usuario creado con Google: ${user.email}`);
       } else {
         // Usuario existente - actualizar información de Google si es necesario
         if (!user.googleId) {
@@ -376,7 +374,8 @@ class GoogleAuthService {
         username: user.username,
         email: user.email,
         role: user.role,
-        authProvider: 'google'
+        authProvider: 'google',
+        mfa: true  // Incluir MFA para usuarios de Google
       });
 
       // Guardar log de sesión exitosa

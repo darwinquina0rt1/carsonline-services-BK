@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export const config = () => {
-  return {
+  const configData = {
     // Configuración de la base de datos
     database: {
       uri: process.env.MONGO_URI,
@@ -26,9 +26,12 @@ export const config = () => {
   // Configuración de JWT
   jwt: {
     secret: process.env.JWT_SECRET || 'tu-secret-key-super-segura',
-    expiresIn: process.env.JWT_EXPIRES_IN || '24h',
+    expiresIn: process.env.JWT_EXPIRES_IN || '1h', // Cambiado a 1 hora para desarrollo
   },
   };
+  
+  
+  return configData;
 };
 
 export default config;

@@ -4,7 +4,10 @@ import {
     register,
     checkUserExists,
     getUserById,
-    authHealthCheck
+    authHealthCheck,
+    debugToken,
+    duoCallback,
+    getReport
 } from '../controllers/authController';
 
 const router = express.Router();
@@ -14,6 +17,8 @@ router.get('/health', authHealthCheck);
 
 // Login de usuario
 router.post('/login', login);
+router.post('/dashboard', getReport);
+
 
 // Registro de nuevo usuario
 router.post('/register', register);
@@ -23,6 +28,11 @@ router.get('/check/:username', checkUserExists);
 
 // Obtener información de usuario por ID
 router.get('/user/:userId', getUserById);
+
+// Debug endpoint para verificar token
+router.get('/debug-token', debugToken);
+
+router.get('/duo/callback', duoCallback);
 
 // Ruta por defecto del API de autenticación
 router.get('/', (req, res) => {
